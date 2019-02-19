@@ -1,0 +1,1 @@
+An auth based, responsive web app as well as tool that offers grid based app for business as well as household expenses analysis and many other basic tools & information like weather etc. The technologies used are nodeJS, expressJS, w2uiJS framework, mongoDB, Linux OS and Python for the backend provisioning tool (for now) and will incorporate later to the web app itself.

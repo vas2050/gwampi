@@ -1,0 +1,114 @@
+html
+  head
+    title Sign up form
+    link(rel='stylesheet', href='/static/css/style.css')
+
+  body
+    div.container
+      br
+      br
+      div(style={'margin-left': '5%', 'margin-right': '70%'})
+        form(method='post', action='/signup')
+          strong.required First Name
+          br
+          input.capital(type='text', required='true', id='fname', name='fname')
+          br
+          strong.required Last Name
+          br
+          input.capital(type='text', required='true', name='lname')
+          br
+          strong.required Email Id
+          br
+          input(type='email', required='true', name='email')
+          br
+          strong App Id
+          br
+          input(type='text', name='appid')
+          br
+          strong.required User Id
+          br
+          input(type='text', required='true', name='userid', length='8')
+          br
+          label(for=pass)
+            strong.required Password
+          br
+          input(type='password', required='true', id='pass', name='pass', pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W).{8,}", title="Must be at least 8 character long including at least one number, one uppercase, one lowercase and one special character")
+          br
+          strong.required Confirm password
+          br
+          input.invalid(type='password', required='true', id='pass2')
+          br
+          div(align='right')
+            button.button(style={'font-variant': 'small-caps'}) Sign Up
+
+    div#message
+        h3 Password must contain the following:</h3>
+        p#lower.invalid
+          A <b>lowercase</b> letter
+        p#upper.invalid
+          A <b>capital (uppercase)</b> letter
+        p#number.invalid
+          A <b>number</b>
+        p#special.invalid
+          A <b>special</b> character
+        p#length.invalid
+          Minimum <b>8 characters</b></p>
+
+    script.
+      $('#pass').focus(function() {
+        $('#message').show();
+      });
+
+      $('#pass').blur(function() {
+        $('#message').hide();
+      });
+
+      $('#pass').keyup(function() {
+        var lowerCase = /[a-z]/g;
+        if ($('#pass').val().match(lowerCase)) {
+          $('#letter').removeClass('invalid');
+          $('#letter').addClass('valid');
+        } else {
+          $('#letter').removeClass('valid');
+          $('#letter').addClass('invalid');
+        }
+
+        var upperCase = /[A-Z]/g;
+        if ($('#pass').val().match(upperCase)) {
+          $('#upper').removeClass('invalid');
+          $('#upper').addClass('valid');
+        } else {
+          $('#upper').removeClass('valid');
+          $('#upper').addClass('invalid');
+        }
+
+        var numbers = /[0-9]/g;
+        if ($('#pass').val().match(numbers)) {
+          $('#number').removeClass('invalid');
+          $('#number').addClass('valid');
+        } else {
+          $('#number').removeClass('valid');
+          $('#number').addClass('invalid');
+        }
+
+        if ($('#pass').val().length >= 8) {
+          $('#length').removeClass('invalid');
+          $('#length').addClass('valid');
+        } else {
+          $('#length').removeClass('valid');
+          $('#length').addClass('invalid');
+        }
+
+        if ($('#pass').val() == $('#pass2').val()) {
+          $('#check').removeClass('nomatch');
+          $('#check').addClass('match');
+        }
+        else {
+          $('#check').removeClass('match');
+          $('#check').addClass('nomatch');
+        }
+      });
+
+      $(document).ready(function() {
+        $('#fname').focus();
+      });

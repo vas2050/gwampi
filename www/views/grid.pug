@@ -1,0 +1,589 @@
+doctype html
+html(lang="en")
+  head
+    script(src='/static/lib/jquery-3.3.1.js')
+    script(src='/static/lib/w2ui.min.js')
+    script(src='/static/lib/common.js')
+    script(src='https://www.gstatic.com/charts/loader.js')
+    link(rel='stylesheet', type='text/css', href='/static/css/w2ui.min.css')
+    link(rel='stylesheet', type='text/css', href='/static/css/style.css')
+  body
+    script.
+      // widget configuration
+      var gridHES = [];
+      var dataa;
+      var config = {
+        layout: {
+          name: 'layout',
+          style: 'border: 1px solid green; background-color: yellow;',
+          padding: 4,
+          panels: [
+            { type: 'left', size: '9%', minSize: '9%' },
+            { type: 'main' },
+            { type: 'right', size: '21%', minSize: '21%' },
+          ]
+        },
+        sidebar: {
+          name: 'sidebar',
+          nodes: [
+            { id: 'general', text: 'Topics', group: true, expanded: true,
+              nodes: [
+                { id: 'her', text: 'H.E.R.', img: 'icon-page', selected: true },
+                { id: 'hea', text: 'H.E.A.', img: 'icon-page' },
+              ]
+            }
+          ],
+          onClick: function (event) {
+            switch(event.target) {
+              case 'her':
+                w2ui.layout.content('main', w2ui.grid1);
+                w2ui.layout.content('right', w2ui.form1);
+                break;
+              case 'hea':
+                w2ui.layout.content('main', $().w2form(config.form3));
+                w2ui.layout.content('right', $().w2form(config.form2));
+                w2ui.layout.content('main', w2ui.form3);
+                w2ui.layout.content('right', w2ui.form2);
+                break;
+            }
+          }
+        },
+        grid1: {
+          name: 'grid1',
+          limit: 500,
+          multiselect: true,
+          show: {
+            toolbar: true,
+            header: true,
+            footer: true,
+            toolbarReload: false,
+            toolbarDelete: true,
+            toolbarAdd: true,
+            toolbarEdit: true,
+            lineNumbers: true,
+            selectColumn: true,
+          },
+          columns: [
+            { field: 'category', caption: 'Category', size: 16, sortable: true, type: 'text' },
+            { field: 'bdate', caption: 'Bought', size: 12, sortable: true, render: 'date' },
+            { field: 'adate', caption: 'Added', size: 12, sortable: true, render: 'date' },
+            { field: 'addedBy', caption: 'Added By', size: 10, sortable: true, type: 'text' },
+            { field: 'amount', caption: 'Amount', size: 10, sortable: true, render: 'money' },
+            { field: 'udate', caption: 'Updated', size: 12, sortable: true, render: 'date' },
+            { field: 'updatedBy', caption: 'Updated By', size: 10, sortable: true, type: 'text' },
+          ],
+          sortData: [
+            { field: 'category', direction: 'asc' },
+            { field: 'amount', direction: 'asc' },
+            { field: 'bdate', direction: 'asc' },
+            { field: 'adate', direction: 'asc' },
+            { field: 'udate', direction: 'asc' },
+            { field: 'addedBy', direction: 'asc' },
+            { field: 'updatedBy', direction: 'asc' },
+          ],
+          searches: [
+            { field: 'category', type: 'text', caption: 'Category' },
+            { field: 'addedBy', type: 'text', caption: 'Added By' },
+            { field: 'updatedBy', type: 'text', caption: 'Updated By' },
+            { field: 'amount', type: 'money',  caption: 'Amount' },
+            { field: 'bdate', type: 'date', caption: 'Bought' },
+            { field: 'adate', type: 'date', caption: 'Added' },
+            { field: 'udate', type: 'date', caption: 'Updated' },
+          ],
+          onRender: function(event) {
+            event.onComplete = function() {
+              this.lock('Loading ...', true);
+              if (gridHES.length == 0) {
+                loadRecords(function() {
+                  loadGrid(function(status) {
+                    console.log(status);
+                    w2ui.grid1.unlock();
+                    $(document).ready(function() {
+                      clearForm();
+                      //$('#recid').val(getNextId());
+                    });
+                  });
+                });
+              }
+              else {
+                loadGrid(function(status) {
+                  console.log(status);
+                  w2ui.grid1.unlock();
+                  $(document).ready(function() {
+                    clearForm();
+                    //$('#recid').val(getNextId());
+                  });
+                });
+              }
+            }
+          },
+          onClick: function(event) {
+            var form = w2ui.form1;
+            event.onComplete = function () {
+              var sel = this.getSelection();
+              form.lock();
+              if (sel.length == 1) {
+                form.header = 'View Record';
+                form.recid  = sel[0];
+                form.record = $.extend(true, {}, this.get(form.recid));
+                form.refresh();
+              }
+              else {
+                clearForm();
+              }
+            }
+          },
+          onAdd: function(event) {
+            var form = w2ui.form1;
+            event.onComplete = function () {
+              this.selectNone();
+              form.unlock();
+              form.header = 'Add Record';
+              clearForm();
+              $('#category').focus();
+            }
+          },
+          onDelete: function(event) {
+            // delete from the db
+            w2confirm('Are you sure you wanna delete these?').yes(function() {
+              w2ui.layout.lock('left');
+              w2ui.grid1.lock('Please wait ...', true);
+              console.log('user clicked YES');
+              var sel = w2ui.grid1.getSelection();
+              w2ui.grid1.selectNone();
+              var done = [];
+              for(var i in sel) {
+                console.log(sel[i]);
+                var rec = w2ui.grid1.get(sel[i]);
+                if (rec.cid) {
+                  $.ajax({
+                    url: '/grid/her/' + rec.recid + '/' + rec.cid,
+                    type: 'DELETE',
+                    success: function(data, status) {
+                      console.log(status, data);
+                      w2ui.grid1.remove(data.recid);
+                      done.push(i);
+                    },
+                    error: function(xhr, status, err) {
+                      done.push(i);
+                      event.preventDefault();
+                      console.log(status, err);
+                      alert(status);
+                    }
+                  });
+                }
+              }
+              var check = setInterval(function() {
+                if (done.length == sel.length) {
+                  loadRecords(function() {});
+                  clearForm();
+                  w2ui.layout.unlock('left');
+                  w2ui.grid1.unlock();
+                  clearInterval(check);
+                }
+              }, 1000);
+
+            }).no(function () {
+              console.log("user clicked NO")
+              event.preventDefault();
+            });
+          },
+          onEdit: function(event) {
+            var form = w2ui.form1;
+            event.onComplete = function () {
+              var sel = this.getSelection();
+              if (sel.length == 1) {
+                form.header = 'Edit Record';
+                form.unlock();
+                var recid  = sel[0];
+                var record = this.get(recid);
+
+                record.adate = new Date(record.adate);
+                record.adate = record.adate.toLocaleDateString();
+                record.bdate = new Date(record.bdate);
+                record.bdate = record.bdate.toLocaleDateString();
+                form.record = record;
+                form.refresh();
+                $('#bdate').w2field('date', {format: 'mm/dd/yyyy', end: getToday()});
+              }
+            }
+          },
+        },
+        form3: {
+          header: '',
+          name: 'form3',
+          style: 'border: 0px; background-color: none;',
+          formHTML:
+              '<div>'
+            + '  <div align="center" id="pieChart" style="width: 100%; height: 100%;"></div>'
+            + '</div>',
+          onLoad: function(event) {
+            event.onComplete = function() {
+              console.log(event);
+            }
+          },
+        },
+        form1: { 
+          header: 'Add Record',
+          name: 'form1',
+          style: 'border: 0px; background-color: none;',
+          formHTML:
+              '<div>'
+            + '  <div class="w2ui-field">'
+            + '    <label>Record Id</label>'
+            + '      <div>'
+            + '        <input id="recid" name="recid" type="int" maxlength="10" size="10" readonly/>'
+            + '      </div>'
+            + '  </div>'
+            + '  <div class="w2ui-field">'
+            + '    <label>Category</label>'
+            + '    <div>'
+            + '      <input id="category" name="category" type="text" maxlength="16" size="16"/>'
+            + '    </div>'
+            + '  </div>'
+            + '  <div class="w2ui-field">'
+            + '    <label>Amount</label>'
+            + '    <div>'
+            + '      $<input name="amount" type="text" pattern="^\d+(\.\d{2})?$" maxlength="7" size="7"/>'
+            + '    </div>'
+            + '  </div>'
+            + '  <div class="w2ui-field">'
+            + '    <label for="bdate" >Bought On</label>'
+            + '    <div>'
+            + '      <input id="bdate" placeholder="mm/dd/yyyy" type="us-date" name="bdate" maxlength="10" size="10"/>'
+            + '    </div>'
+            + '  </div>'
+            + '  <div class="w2ui-field">'
+            + '    <label>Added On</label>'
+            + '    <div>'
+            + '      <input name="adate" type="us-date" maxlength="10" size="10" readonly/>'
+            + '    </div>'
+            + '  </div>'
+            + '</div>'
+            + '<br/><br/>'
+            + '<div align="center">'
+            + '  <button class="button" name="reset" style="padding: 8px 20px;">Clear</button>'
+            + '  <button class="button" name="save" style="padding: 8px 20px;">Submit</button>'
+            + '</div>',
+          fields: [
+            { name: 'recid',
+              type: 'int',
+              required: true,
+              html: { caption: 'Record Id', attr: 'size="10" readonly' }
+            },
+            { name: 'category',
+              type: 'text',
+              required: true,
+              html: { caption: 'Category', attr: 'size="20"' }
+            },
+            { name: 'amount',
+              type: 'text',
+              required: true,
+              html: { caption: 'Amount', attr: 'size="7"' }
+            },
+            { name: 'bdate',
+              type: 'date',
+              required: true,
+              html: { caption: 'Bought', attr: 'size="10"' },
+            },
+            { name: 'adate',
+              type: 'date',
+              html: { caption: 'Added', attr: 'size="10" readonly' }
+            },
+          ],
+          onRender: function(event) {
+            var grid = w2ui.grid1;
+            var form = w2ui.form1;
+            event.onComplete = function() {
+              clearForm();
+              form.lock();
+              console.log('form1 loaded');
+            }
+          },
+          actions: {
+            reset: function () {
+              clearForm();
+              $('#category').focus();
+            },
+            save: function () {
+              var errors = this.validate();
+              if (errors.length > 0) return;
+
+              this.lock();
+              w2ui.layout.lock('left');
+              w2ui.grid1.lock('Please wait ...', true);
+              var category = this.record.category.trim();
+              category = category[0].toUpperCase() + category.slice(1,).toLowerCase();
+              this.record.category = category;
+
+              var amount = Number(this.record.amount).toFixed(2);
+              this.record.amount = amount;
+
+              recid = this.record.recid;
+
+              var grid = w2ui.grid1;
+              var sel = grid.getSelection();
+              var sel_id = sel[0] || 0;
+              if (sel_id == 0) { // new item
+                $.ajax({
+                  url: '/grid/her',
+                  type: 'POST',
+                  data: this.record,
+                  success: function(data, status) {
+                    console.log(status, data.record, data.message);
+                    data.record.recid = recid;
+                    grid.add(data.record);
+                    grid.scrollIntoView(grid.get(recid, true));
+                    grid.select(recid);
+                    w2ui.layout.unlock('left');
+                    grid.unlock();
+                    loadRecords(function() {});
+                  },
+                  error: function(xhr, status, err) {
+                    console.log(status, err);
+                    alert(status);
+                  }
+                });
+              }
+              else { // update
+                this.record.udate = getToday();
+                var cid = this.record.cid;
+                $.ajax({
+                  url: '/grid/her',
+                  type: 'PUT',
+                  data: this.record,
+                  success: function(data, status) {
+                    console.log(status, data.record.cid, data.message);
+                    grid.set(recid, this.record);
+                    grid.scrollIntoView(grid.get(recid, true));
+                    grid.select(recid);
+                    w2ui.layout.unlock('left');
+                    grid.unlock();
+                    loadRecords(function() {});
+                  },
+                  error: function(xhr, status, err) {
+                    console.log(status, err);
+                    alert(status);
+                  }
+                });
+              }
+              this.header = 'View Record';
+              this.refresh();
+            },
+          }
+        },
+        form2: { 
+          header: 'Menu',
+          name: 'form2',
+          style: 'border: 0px; background-color: none;',
+          formHTML:
+              '<div>'
+            + '  <div align="center" id="year_month"></div>'
+            + '</div>',
+          fields: [],
+          onLoad: function(event) {
+            event.onComplete = function() {
+              console.log(event);
+            }
+          },
+          onRender: function(event) {
+            event.onComplete = function() {
+              populateData();
+              loadYearMenu();
+            }
+          },
+        },
+      };
+
+      $(function () {
+        // initialization, load HER
+        $('#main').w2layout(config.layout);
+        w2ui.layout.content('left', $().w2sidebar(config.sidebar));
+        w2ui.layout.content('main', $().w2grid(config.grid1));
+        w2ui.layout.content('right', $().w2form(config.form1));
+
+      });
+
+
+      function loadRecords(callback) {
+        $.ajax({
+          url: '/grid/her/',
+          type: 'GET',
+          success: function(records, status) {
+            for (var i in records) {
+              records[i].recid = Number(i) + 1;
+            }
+            gridHES = records.slice(0,);
+            callback(status);
+          },
+          error: function(xhr, status, err) {
+            alert(status);
+            callback(status);
+          }
+        });
+      }
+
+      function getToday(sep) {
+        if (sep === undefined) sep = '/';
+        var dt = new Date();
+        var mm = dt.getMonth() + 1;
+        var dd = dt.getDate();
+        var yy = dt.getFullYear();
+
+        return([mm,dd,yy].join(sep));
+      }
+
+      function clearForm() {
+        var form = w2ui.form1;
+
+        form.record = {
+          recid: getNextId(),
+          adate: getToday(),
+        }
+        form.refresh();
+        $('#bdate').w2field('date', {format: 'mm/dd/yyyy', end: getToday()});
+        w2ui.grid1.selectNone();
+      }
+
+      function getNextId() {
+        var grid = w2ui.grid1;
+
+        var recid = 1;
+        if (grid.records.length > 1) {
+          recid = grid.records.reduce((max, rec) => rec.recid > max ? rec.recid : max, grid.records[0].recid);
+          recid += 1;
+        }
+        return recid;
+      }
+
+      function summary() {
+        var sum = 0;
+        if (w2ui.records) {
+          sum = records.reduce((t, rec) => t + rec.amount, 0);
+        }
+        return sum;
+      }
+      
+      function loadGrid(callback) {
+        var records = gridHES.slice(0,);
+        var lastRow = {
+          w2ui: { style: 'font-color: red;' },
+          summary: true,
+          recid: 'S-1',
+          addedBy: 'Total',
+          amount: records.reduce((t, rec) => t + Number(rec.amount), 0)
+        }
+        records.push(lastRow);
+        w2ui.grid1.clear();
+        w2ui.grid1.add(records);
+        callback("grid1 loaded");
+      }
+
+      function populateData() {
+        var records = gridHES.slice(0,);
+        dataa = {};
+        for (var i in records) {
+          var rec = records[i];
+          var cat = rec.category;
+
+          var [y, m] = rec.bdate.split('-').splice(0,2);
+          y = 'y' + y.toString().padStart(4,0);
+          m = 'm' + m.toString().padStart(2,0);
+
+          var amount = 0;
+          //console.log("Data: ", dataa);
+          console.log("y: ", y);
+          console.log("m: ", m);
+          if (y in dataa) {
+          console.log("y: ", y);
+            if (m in dataa[y]) {
+          console.log("m: ", m);
+              if (cat in dataa[y][m]) {
+                amount = dataa[y][m][cat];
+              }
+            }
+            else {
+              dataa[y][m] = {};
+            }
+          }
+          else {
+            dataa[y] = {};
+            dataa[y][m] = {};
+          }
+
+          dataa[y][m][cat] = (Number(amount) + Number(rec.amount)).toFixed(2);
+        }
+      }
+
+      function loadYearMenu() {
+        var years = Object.keys(dataa);
+        var html = '<table>';
+        for (var i in years) {
+          var yy = years[i].replace(/^y/, '');
+          html += '<tr><td>&nbsp;</td></tr><tr>'
+               +  '  <td>'
+               +  '    <button class="button" style="padding: 12px 50px;" onClick="clickYear(this)" value="' + years[i] + '">' + yy + '</button>'
+               +  '  </td>'
+               +  '</tr>';
+        }
+        html += '</table>';
+        w2ui.form2.header = 'Menu';
+        w2ui.form2.refresh();
+        $('#year_month').html(html);
+      }
+
+      function clickYear(el) {
+        var y = el.getAttribute('value');
+        w2ui.form2.header = 'Year ' + y.replace(/^y/, '');
+        w2ui.form2.refresh();
+        var cols = 0;
+        var html = '<div align="right"><button style="padding:4px 15px;font-size:20px;" onClick="loadYearMenu()">&crarr;</button></div><br/>';
+        html += '<table>';
+        console.log("D: ", dataa);
+        console.log("Y: ", y);
+        for (var m in dataa[y]) {
+          console.log("M: ", m);
+          console.log("MMM: ", getMonthById(m.replace(/^m/, '')));
+          var mm = getMonthById(m.replace(/^m/, ''));
+          if (cols % 2 == 0) html += '<tr>';
+          html += '<td>'
+               +  '  <button class="button" style="padding: 12px 45px;" onClick="clickMonth(this);" value="' + y + '-' + m + '">' + mm + '</button>'
+               +  '</td><td>&nbsp;</td>';
+          cols++;
+          if (cols % 2 == 0) html += '</tr>';
+        }
+        if (cols % 2 == 1) html += '</tr>';
+        html += '</table>';
+
+        $('#year_month').html(html);
+      }
+
+      function clickMonth(el) {
+        var [y, m] = el.getAttribute('value').split('-');
+        var month = getMonthById(m.replace(/^m/, ''));
+        var year = y.replace(/^y/, '');
+
+        google.charts.load('current', {'packages':['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+          var cat = new Array;
+          cat.push(['Category', 'in Dollars']);
+          for (var category in dataa[y][m]) {
+            cat.push([category, Number(dataa[y][m][category])]);
+          }
+
+          var d = google.visualization.arrayToDataTable(cat);
+          var options = {
+            pieHole: 0.4,
+            //backgroundColor: 'grey',
+            //legend: 'none',
+            //pieSliceText: 'label',
+            title: month + ' ' + year,
+            //is3D: true
+          };
+
+          var chart = new google.visualization.PieChart(document.getElementById('pieChart'));
+          chart.draw(d, options);
+        }
+      }

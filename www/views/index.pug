@@ -1,0 +1,224 @@
+// BEGIN
+html
+  head
+    title Gwampi 2050
+    link(rel='stylesheet', href='/static/css/style.css')
+    script(src='/static/lib/jquery-3.3.1.js')
+    script(src='/static/lib/common.js')
+
+    script.
+      var geoData;
+      window.onload = function() {
+        clock();
+        loadGeoData();
+        checkSessionOut();
+      }
+
+      function checkSessionOut() {
+        //did previous session expire automatically?
+        if ('#{session_expired}' == 'true') {
+          $('div #rfoot').html("<p style='color: red;'>Your session expired!</p>");
+        }
+
+        // only if there is a valid user session exists
+        if ('#{session.user}') {
+          var HMS = getHMS($('#maxAge').text());
+          if (HMS) {
+            $('#maxAge').text(HMS);
+            setTimeout('checkSessionOut()', 1000);
+          }
+          // when it hits below zero
+          else if (HMS === null) {
+            $('div #rfoot').html("<p style='color: red;'>Your session expired!</p>");
+            var elem = document.getElementById('logout');
+            var href = elem.href + '?session_expired=true&';
+            elem.setAttribute('href', href);
+            elem.click();
+          }
+        }
+      }
+
+  body
+    - var user = session.user
+    div#head.head(style={'width': '100%', 'height': '15%'})
+      table(width='100%', height= '25%')
+        tbody 
+          tr
+            td(colspan=2)
+              p(style='font-size:14px; font-family:Courier New; color:blue;')
+                |&starf;&nbsp;
+                span#city
+                |&nbsp;&#9728;&nbsp;
+                span#temp_toggle
+                  span#temp
+                  |&deg;
+                  span#type 
+                  |&nbsp;&#9729;&nbsp;
+                  span#wind
+            td &nbsp;
+            td(align='right')
+              div#clock.date
+          tr
+            td &nbsp;
+            td &nbsp;
+            td &nbsp;
+            td(align='right')
+              if user
+                div= user.fullname
+          tr
+            td
+              if user
+                each val, key in {'grid': 'H.e.s'}
+                  div.block(style={'font-variant': 'small-caps'})
+                    a(id=key, class='button-a')= val
+                if user.userid == 'admin'
+                  each val, key in {'server': 'Server Admin'}
+                    div.block(style={'font-variant': 'small-caps'})
+                      a(id=key, class='button-a')= val
+            td
+              if user
+                div.block(style={'font-variant': 'small-caps'})
+                  a#home.button-a(href='/') Home
+            td &nbsp;
+            td(align='right')
+              if user
+                div(style={'font-variant': 'small-caps'})
+                  a#logout.button-a(href='/logout') Logout
+              else
+                div.block(style={'font-variant': 'small-caps'})
+                  a#login.button-a Login
+
+                div.block(style={'font-variant': 'small-caps'})
+                  a#signup.button-a Sign Up
+
+    script.
+      $(document).ready(function() {
+        // login
+        $('#login').on('click', function() {
+          $.ajax({
+            url: '/login',
+            type: 'GET',
+            dataType: 'html',
+            success: function(data, status) {
+              console.log('/GET passed');
+              $('#main').css('background-image', 'none');
+              $('#main').html(data);
+              footer('blue', 'Good luck!', true);
+            },
+            error: function(xhr, status, error) {
+              console.log(status);
+              alert(error);
+            }
+          })
+          /* duplicates
+          .done(function(data, status, xhr) {
+            console.log(status);
+          })
+          .fail(function(xhr, status, error) {
+            console.log(status);
+            alert(error);
+          });
+          */
+        });
+
+        // signup
+        $('#signup').on('click', function() {
+          $.ajax({
+            url: '/signup',
+            type: 'GET',
+            dataType: 'html',
+            success: function(data, status) {
+              console.log('/GET passed');
+              $('#main').css('background-image', 'none');
+              $('#main').html(data);
+            },
+            error: function(xhr, status, error) {
+              console.log(status);
+              alert(error);
+            }
+          });
+        });
+
+        // grid
+        $('#grid').on('click', function() {
+          $.ajax({
+            url: '/grid',
+            type: 'GET',
+            // commeting out this as to support both script & JSON data types.
+            //dataType: 'script/json', // this does not work so just don't specify the type
+            success: function(data, status) {
+              console.log('/GET passed');
+              console.log(status);
+              if (data.error) {
+                console.log(data.error);
+                footer('red', data.error, true);
+                // do nothing
+              }
+              else {
+                $('#main').css('background-image', 'none');
+                $('body').append(data);
+              }
+            },
+            error: function(xhr, status, error) {
+              console.log(status);
+              alert(error);
+            },
+          });
+        });
+
+        $('#temp_toggle').on('click', function() {
+          var wind = $('#wind').html().split(' ');
+          var temp = $('#temp').html();
+          if ($('#type').html() == 'C') {
+            $('#type').html('F');
+            $('#wind').html(getM(wind[0]) + ' mph ' + wind[2]);
+            $('#temp').html(getF(temp));
+          }
+          else {
+            $('#type').html('C');
+            $('#wind').html(getK(wind[0]) + ' kmph ' + wind[2]);
+            $('#temp').html(getC(temp));
+          }
+        });
+
+        /*
+        //logout 
+        $('#logout').on('click', function() {
+          $.ajax({
+            url: '/logout',
+            type: 'GET',
+            dataType: 'html',
+            data: { 'session_expired': session_expired },  
+            success: function(data, status) {
+              console.log('/GET logout passed');
+            },
+            error: function(xhr, status, error) {
+              console.log(status);
+            },
+          });
+        });
+        */
+      })
+
+    hr
+    div#main.main
+    hr
+    div#foot.foot
+      div#lfoot.lfoot
+      div#mfoot.mfoot
+      div#rfoot.rfoot
+        if user
+          - var views = session.views
+          - var path = '/'
+          - views[path] = views[path]
+          - var total = Math.trunc(session.cookie.maxAge / 1000)
+          - var ss = total % 60
+          - var mm = Math.trunc((total % (60 * 60)) / 60)
+          - var hh = Math.trunc(total / (60 * 60))
+          - var maxAge = [hh,mm,ss].map(function(x) {if (x.length==1) x = '0' + x; return x; }).join(':')
+
+          session views: #{views[path]}
+            if views[path]
+              |, session will expire in 
+              span#maxAge #{maxAge}
+// END

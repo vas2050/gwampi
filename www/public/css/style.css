@@ -1,0 +1,338 @@
+div {
+  font-size: 14px;
+  font-family: 'Courier New';
+}
+
+input, textarea, select {
+  padding: 8px;
+  font-size: 16px;
+  font-family: 'Courier New', 'Lucida Casual', 'Comic Sans MS';
+  margin-top: 0px;
+  margin-bottom: 6px;
+  border: 1px solid green;
+  box-sizing: border-box;
+  border-radius: 4px;
+  size: 30px;
+}
+
+input:focus, textarea:focus, select:focus, button:focus {
+  font-weight: bold;
+  outline: none;
+}
+
+div.center {
+  text-align: center;
+  background-color: yellow;
+}
+
+div.head1 {
+  display: inline-block;
+  background-color: yellow;
+  color: black;
+  font-family: 'Times';
+}
+
+div.right {
+  text-align: right;
+  margin-right: 10px;
+}
+
+div.left {
+  text-align: left;
+  margin-left: 10px;
+  color: black;
+}
+
+div.date {
+  font-size: 13px;
+  font-family: Courier;
+  color: red;
+}
+
+div.block {
+  display: inline-block;
+  background-color: yellow;
+}
+
+div.verti {
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 5px;
+  border-left: solid silver 1px;
+  border-right: solid silver 2px;
+  height: 15px;
+}
+
+img {
+  border: 0px solid red;
+  height: 70%;
+  width: 50%;
+  border-radius: 50%;
+  opacity: 0.4;
+}
+
+.button {
+  color: green;
+  cursor: pointer;
+  padding: 9px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: Courier New;
+  text-align: center;
+  border: 1px solid green;
+  font-variant: small-caps;
+  outline: none;
+}
+
+.button:hover {
+  color: white;
+  background-color: green;
+  outline: none;
+}
+
+.button-a {
+  color: green;
+  cursor: pointer;
+  font-size: 16px;
+  text-decoration: none;
+  //background-color: #4caf50;
+  //color: white;
+  padding: 12px 20px;
+  font-family: arial black;
+  //border: 0px solid green;
+  //box-shadow: 10px 10px 10px grey;
+  margin: 2px 2px;
+  //display: inline-block;
+  -webkit-transition-duration: 0.6s; /* Safari */
+  transition-duration: .8s;
+}
+
+.button-a:not(:last-child) {
+  border-right: none; /* Prevent double borders */
+}
+
+.button-a:hover {
+  background-color: green;
+  color: white;
+  box-shadow: 10px 10px 10px grey;
+  // border: 0px solid green;
+  // display: inline-block;
+}
+
+div.head {
+  align: center;
+  background-color: yellow;
+  background-image: url('/static/images/logo.jpg');
+  background-repeat: no-repeat;
+  background-position: 50%;
+}
+
+div.main {
+  align: center;
+  background-image: url('/static/images/bg1.jpg');
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  height: 77%;
+  width: 100%;
+}
+
+.foot {
+  height: 5%;
+  width: 100%;
+  color: blue;
+  font-family: verdana;
+  font-size: 10px;
+  float: left;
+  //display: block;
+}
+
+.lfoot {
+  width: 3%;
+  font-size: x-large;
+  display: inline-block;
+  position: absolute;
+}
+
+.lfoot:before {
+  content: '\1F50A';
+}
+
+.mfoot {
+  width: 60%;
+  padding: 0 5px;
+  text-align: justify;
+  font-size: 16px;
+  display: inline-block;
+  overflow: auto;
+  position: absolute;
+  padding: 0 40px;
+}
+
+.mfoot:before {
+  content: 'Gwampi: ';
+  color: grey;
+}
+
+.mfoot:empty:before {
+  color: blue;
+  font-size: 16px;
+  font-weight: bold;
+  content: 'Welcome to Gwampi!';
+}
+
+.rfoot {
+  //width: 17%;
+  font-size: 16px;
+  display: inline-block;
+  //position: absolute;
+  float: right;
+  color: blue;
+}
+
+table {
+  table-layout: fixed;
+  border-spacing: 5;
+}
+
+td {
+  align: left;
+}
+
+tr {
+  valign: bottom;
+}
+
+table, th, td {
+  border: 0px solid black;
+}
+
+hr {
+  border-color: red;
+  border: 1;
+  height: 0;
+  border-top: 0px solid red;
+  padding: 0;
+}
+
+input.form {
+  border: none;
+  outline: none;
+  height: 40px;
+  font-size: 16px;
+  font-weight: bold;
+  font-family: Courier New;
+  border-bottom: 1px solid grey;
+  float: left;
+  //margin: 10;
+}
+
+.container {
+  background-color: lightyellow;
+  //padding: 10px;
+  height: 100%;
+  
+}
+
+#message {
+  display:none;
+  color: #000;
+  position: relative;
+  //padding: 20px;
+  //margin-top: 10px;
+}
+
+#message p {
+  padding: 5px 20px;
+  font-size: 14px;
+}
+
+.valid {
+  color: green;
+}
+
+.valid:before {
+  position: relative;
+  left: -10px;
+  content: '\2714';
+}
+
+.invalid {
+  color: red;
+}
+
+.invalid:before {
+  position: relative;
+  left: -10px;
+  content: '\2716';
+}
+
+.capital {
+  text-transform: capitalize;
+}
+
+.required:after {
+  color: red;
+  position: relative;
+  right: -2px;
+  content: '*';
+}
+
+.check:after {
+  color: green;
+  position: relative;
+  right: -5px;
+  content: '\2714';
+}
+
+.nocheck:after {
+  color: red;
+  position: relative;
+  right: -5px;
+  content: '\2716';
+}
+
+.match:after {
+  color: green;
+  position: relative;
+  right: -5px;
+  content: '\2714';
+}
+
+.nomatch:after {
+  color: red;
+  position: relative;
+  right: -5px;
+  content: '\2716';
+}
+
+.ucheck:after {
+  color: green;
+  position: relative;
+  right: -5px;
+  content: '\27F6 Available';
+  size: 8px;
+}
+
+.noucheck:after {
+  color: red;
+  position: relative;
+  right: -5px;
+  content: '\27F6 Not Available!';
+  size: 8px;
+}
+
+.echeck:after {
+  color: green;
+  position: relative;
+  right: -5px;
+  content: '\27F6 Good';
+  size: 8px;
+}
+
+.noecheck:after {
+  color: red;
+  position: relative;
+  right: -5px;
+  content: '\27F6 Already Registered!';
+  size: 8px;
+}

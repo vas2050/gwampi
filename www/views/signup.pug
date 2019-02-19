@@ -1,0 +1,298 @@
+doctype
+html
+  head
+    title Sign up form
+    link(rel='stylesheet', href='/static/css/style.css')
+    script(src='/static/lib/common.js')
+    script.
+      $('div #mfoot').html('');
+
+  body
+    div.container
+      br
+      div(style={'margin-left': '5%'})
+        form#sform(method='post', action='/signup')
+          table
+            tr(align='left')
+              th.required First Name
+              th.required Last Name
+            tr
+              td
+                input.capital(type='text', required='true', id='fname', name='fname', pattern="\\w{3,10}", title="Must be a one word 4-10 characters long alpha-numeric")
+              td
+                input.capital(type='text', required='true', name='lname', pattern="\\w{3,10}", title="Must be a one word 4-10 characters long alpha-numeric")
+            tr(align='left')
+              th.required Email Id
+              td
+              td(width='10%')
+              td(rowspan='6')
+                div#message
+                  h3 Password must contain:
+                  p#lower.invalid A <b>lower case</b> letter
+                  p#upper.invalid An <b>upper case</b> letter
+                  p#number.invalid A <b>number</b>
+                  p#special.invalid A <b>special</b> character
+                  p#length.invalid Minimum <b>8 characters</b>
+            tr
+              td(colspan='2')
+                input#email(type='email', required='true', name='email')
+                span#echeck
+            tr(align='left')
+              th App Id
+            tr
+              td
+                input(type='text', name='appid', pattern="\\w{4,8}", title="Must be a one word 4-8 characters long alpha-numeric")
+            tr(align='left')
+              th.required User Id
+            tr
+              td(colspan='2')
+                input#uid(type='text', required='true', name='userid', pattern="\\w{6,10}", title="Must be 6-10 characters long alpha-numeric")
+                span#ucheck
+            tr(align='left')
+              th.required Password
+              th.required Confirm password
+            tr
+              td
+                div(display='inline')
+                  input(type='password', required='true', id='pass', name='pass', pattern="(?=.*\\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\\W).{8,}", title="See the password rules")
+                  |&nbsp;
+                  span#pcheck
+                  |&nbsp;
+              td
+                div(display='inline')
+                  input(type='password', required='true', id='pass2', disabled='true')
+                  |&nbsp;
+                  span#pmatch
+                  |&nbsp;
+
+            tr(align='left')
+              th#th_code
+                span#verify(style='display:none;')
+                  br
+                  b Enter the code
+            tr
+              td
+                span#verify(style='display:none')
+                  input(type='text', id='vcode')
+              td
+                span#verify(style='display:none')
+                  input.button(id='verify', type='button', onClick='verifyCode()', value=' verify ')
+                  |&nbsp;
+                  span#verified
+                  |&nbsp;
+            tr(align='center')
+              td(colspan='2')
+                br
+                input.button(id='next', type='submit', value='  next  ')
+    script.
+      $('#pass').focus(function() {
+        $('#message').show();
+      });
+
+      $('#pass').blur(function() {
+        $('#message').hide();
+      });
+
+      $('#pass').keyup(function() {
+        var lower = /[a-z]/g;
+        if ($('#pass').val().match(lower)) {
+          $('#lower').removeClass('invalid').addClass('valid');
+        } else {
+          $('#lower').removeClass('valid').addClass('invalid');
+        }
+
+        var upper = /[A-Z]/g;
+        if ($('#pass').val().match(upper)) {
+          $('#upper').removeClass('invalid').addClass('valid');
+        } else {
+          $('#upper').removeClass('valid').addClass('invalid');
+        }
+
+        var numbers = /[0-9]/g;
+        if ($('#pass').val().match(numbers)) {
+          $('#number').removeClass('invalid').addClass('valid');
+        } else {
+          $('#number').removeClass('valid').addClass('invalid');
+        }
+
+        if ($('#pass').val().length >= 8) {
+          $('#length').removeClass('invalid').addClass('valid');
+        } else {
+          $('#length').removeClass('valid').addClass('invalid');
+        }
+
+        var special = /\W/g;
+        if ($('#pass').val().match(special)) {
+          $('#special').removeClass('invalid').addClass('valid');
+        } else {
+          $('#special').removeClass('valid').addClass('invalid');
+        }
+
+        if ($('p.invalid').length) {
+          $('#pass2').attr('disabled', true);
+          $('#pcheck').removeClass('check');
+        }
+        else {
+          $('#pass2').attr('disabled', false);
+          $('#pcheck').addClass('check');
+        }
+      });
+
+      $('#pass2').keyup(function() {
+        if ($('#pass').val() == $('#pass2').val()) {
+          $('#pmatch').removeClass('nomatch').addClass('match');
+        }
+        else if ($('#pass2').val()) {
+          $('#pmatch').removeClass('match').addClass('nomatch');
+        }
+        else if (! $('#pass2').val()) {
+          $('#pmatch').removeClass('nomatch');
+        }
+      });
+
+      $(document).ready(function() {
+        $('#fname').focus();
+      });
+
+      $('#sform').submit(function(e) {
+        // do not submit, need to verify the code :)
+        e.preventDefault();
+
+        var email = $('#email').val().trim(); 
+        var uid = $('#uid').val().trim(); 
+        if (! ($('span.echeck').length && $('span.ucheck').length)) {
+          $.get('/check', {email: email, userid: uid}, function(data) {
+            if (data.message == 'error') {
+              console.log('error');
+            }
+            else {
+              footer('green', 'Availability check done.');
+              if (data.message.userid) {
+                console.log('userid already taken!');
+                footer('red', 'User id is already taken!');
+                $('span#ucheck').removeClass('ucheck');
+                $('span#ucheck').addClass('noucheck');
+              }
+              else {
+                console.log('userid looks good');
+                footer('green', 'User id looks good!');
+                $('span#ucheck').removeClass('noucheck');
+                $('span#ucheck').addClass('ucheck');
+              }
+
+              if (data.message.email) {
+                console.log('email already registered!');
+                footer('red', 'E-mail id is already registered!');
+                $('span#echeck').addClass('noecheck');
+              }
+              else {
+                console.log('email looks good');
+                footer('green', 'E-mail id looks good!');
+                $('span#echeck').removeClass('noecheck');
+                $('span#echeck').addClass('echeck');
+              }
+            }
+            footer('', '', true);
+          }).fail(function() {
+            console.log('/GET failed');
+          });
+        }
+
+        // wait for check results
+        var waitCheck = setInterval(function() {
+          if ($('span.noucheck').length || $('span.ucheck').length) {
+            clearInterval(waitCheck);
+
+            var verified = $('#verified').val() || null;
+
+            var errors;
+            errors = !$('span.check').length + !$('span.match').length;
+            errors += $('span.noucheck').length + $('span.noecheck').length;
+            console.log('errors: ', errors);
+
+            if (errors) {
+              console.log("something not right!");
+            }
+            else if (verified == 'false') {
+              footer('red', "Sorry, you have entered a wrong code!", true);
+            }
+            else if (verified === null) {
+              var email = $('#email').val().trim();
+              var fname = $('#fname').val().trim();
+              $.get('/code/gen', {email: email, fname: fname}, function(data) {
+                if (data.message == 'success') {
+                  console.log('code gen success');
+                  footer('green', "The code has been sent to your registered e-mail.", true);
+                  $('form#sform :input').each(function() {
+                    if (this.id != 'vcode' && this.id != 'verify') {
+                      $(this).prop('readonly', true);
+                    }
+                  });
+                  $('#next').prop('disabled', true);
+                  $('span#verify').show();
+                  $('input#vcode').attr('required', true);
+                  $('#th_code').addClass('required');
+                  $('input#vcode').focus();
+                }
+                else {
+                  console.log('code gen error');
+                }
+              }).fail(function() {
+                console.log('/GET failed');
+              });
+            }
+            else if (verified == 'true') {
+              // avoid multiple clicks
+              if ($('#next').prop('disabled')) {
+                return false;
+              }
+              $('#next').prop('disabled', true);
+              console.log('all good');
+              // stop default action, let's do our way!
+              $.post('/signup', $('#sform').serialize(), function(data) {
+                if (data.message == 'success') {
+                  footer('green', "Congratulations! Your request has been sent for review. "
+                     + "You will be notified once it's approved and activated.", true);
+                }
+                else if (data.message == 'error') {
+                  footer('red', "Sorry! Your request didn't go through :(", true);
+                }
+              }).fail(function() {
+                console.log('/POST failed');
+              });
+            }
+          }
+          else {
+            console.log('waiting ...');
+          }
+        }, 1000);
+      });
+
+      function verifyCode() {
+        var code = $('input#vcode').val().trim(); 
+        if (!code) {
+          console.log('blank');
+          return false;
+        }
+        $.get('/code/verify', {email: $('#email').val() , code: $('input#vcode').val()}, function(data) {
+          if (data.message == 'success') {
+            console.log('verified');
+            footer('green', 'Nice job! Your code has been verified!', true);
+            $('input#vcode').attr('disabled', true);
+            $('input#verify').attr('disabled', true);
+            $('input#verify').val('verified');
+            $('input#next').attr('disabled', false);
+            $('span#verified').val('true');
+            $('span#verified').removeClass('nocheck');
+            $('span#verified').addClass('check');
+          }
+          else {
+            console.log('failed');
+            footer('red', "Sorry, you have entered a wrong code!", true);
+            $('span#verified').val('false');
+            $('span#verified').addClass('nocheck');
+          }
+        }).fail(function() {
+            console.log('/GET failed');
+        });
+      }

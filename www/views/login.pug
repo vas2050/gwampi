@@ -1,0 +1,65 @@
+html
+  head
+    title Login Form
+    link(rel='stylesheet', href='/static/css/style.css')
+    script(src='/static/lib/common.js')
+    script.
+      $('div #rfoot').html('');
+  body
+    div(style={'margin-left': '5%'})
+      br
+      br
+      form#lform(method='post' action='/login')
+        br
+        br
+        br
+        table
+          tr
+            td
+              input#uid.form(required='true', type='text', placeholder='Your E-mail or User Id', name='userid', size='25px')
+          tr
+            td
+              input#pass.form(required='true', type='password', placeholder='Password', name='password', size='25px')
+          tr
+            td(align='right')
+              input#submit.button(type='submit', value=' Login ')
+
+    script.
+      $(document).ready(function() {
+        $('#uid').focus();
+      });
+
+      $('#lform').submit(function(e) {
+        // do not submit
+        e.preventDefault();
+
+        // avoid multiple clicks
+        if ($('#submit').prop('disabled')) {
+          return false;
+        }
+
+        // allow after 3s
+        $('#submit').prop('disabled', true);
+        setTimeout(function() {
+          $('#submit').prop('disabled', false);
+        }, 3000);
+
+        $.ajax({
+          type: 'POST',
+          url: '/login',
+          data: $('#lform').serialize(),
+          success: function(data, status) {
+            window.location = '/';
+            console.log(status);
+          },
+          error: function(xhr, status, error) {
+            console.log("status: ", status);
+            if (xhr.status == 401) {
+              footer('red', 'Sorry! You are not authorized!', true);
+            }
+            else {
+              footer('red', 'Sorry! login failed for some reason :(', true);
+            }
+          }
+        });
+      });

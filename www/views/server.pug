@@ -1,0 +1,16 @@
+html
+  head
+    title Server Admin
+    link(rel='stylesheet', href='/static/css/style.css')
+    script(src='/static/lib/jquery-3.3.1.js')
+  body
+    div#form
+      form(action='/server/stop', method='post')
+        input(type='radio', name='stop', value='stop')
+        input(type='radio', name='restart', value='restart')
+        input(type='button', value='submit')
+
+    script.
+      $(document).ready(function() {
+      $('#main').load('#form');
+    });
