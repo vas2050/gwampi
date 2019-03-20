@@ -13,8 +13,6 @@ const router = express.Router();
 var Her;
 router.use(function(req, res, next) {
   if (req.user && req.user.appid) {
-    logger.logInfo("user " + req.user.userid + " now authorized");
-
     Appid.findOneByName(req.user.appid, function(err, appObj) {
       if (err) {
         logger.logError("findOneByName() failed");
@@ -36,7 +34,8 @@ router.use(function(req, res, next) {
 
 router.get('/', function(req, res) {
   logger.logInfo(req.method.toUpperCase() + ' ' + req.path);
-
+ 
+  //sleep.msleep(500); // let session updated by /comm
   res.render('grid', function(err, script) {
     if (err) {
       res.sendStatus(500);

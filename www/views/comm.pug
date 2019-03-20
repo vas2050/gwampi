@@ -1,0 +1,138 @@
+html
+  head
+    link(rel='stylesheet', href='/static/css/style.css')
+    script(src='/static/lib/common.js')
+    script(src='/socket.io/socket.io.js')
+    script.
+      footer('green', 'Welcome to the chat cafe!', true);
+    title chat
+  body
+    form#chatForm(action="")
+      div#chatWin.chatWin
+        table(rows="3", cols="4", bgcolor="white", style="border:2px solid green; padding: 10px;")
+          thead(text-align="center")
+            tr
+              th(colspan="3", align="center") <u>Chat Cafe</u>
+              th#online
+          tbody
+            tr
+              td(colspan="3")
+                p#cafe(style="min-height:0%; max-height:55vh; width:50vw; overflow:auto; border:1px solid light-red")
+              td
+                p#users
+            tr
+              td
+                input#msg(size="70vw", type="text", placeholder="Type your message here ...", autofocus="true", style="border: 1px solid light-green", autocomplete="off")
+              td &nbsp;
+              td
+                button(class="button", type="submit", style="border-radius:50%;padding:8px 18px;") Send
+
+    script.
+      //$('#main').css('opacity', '0.8');
+      $("p#cafe").get(0).style.backgroundColor = "white";
+
+      var user = '#{session.user.userid}';
+      var name = '#{session.user.fullname}';
+      var prevChatHash;
+
+      //OLD: no more we require to pass query as we now have shared app session to socket.io
+      //OLD: var socket = io({query: "user=" + user});
+      var socket = io();
+      var count = 0;
+
+      $(document).ready(function() {
+        $('form#chatForm').on('submit', function(e) {
+          e.preventDefault();
+
+          // trim off extra white spaces
+          var msg = $('#msg').val().trim();
+
+          // do nothing if empty
+          if (msg == '') {
+            $('#msg').val('');
+            return false;
+          }
+
+          var msg =  '<span style="color: blue">' + name + '</span>: ' + msg + '<br/>';
+          $('#msg').val('');
+
+          socket.emit('comm_channel', {from: user, msg: msg});
+        });
+
+        $('.input').keypress(function(e) {
+          if (e.which == 13) {
+            $('form#chatForm').submit();
+            return false;
+          }
+        });
+
+        socket.on('comm_channel', function(msg) {
+          var msg = $('p#cafe').html() + msg;
+          $('p#cafe').html(msg);
+
+          // badge
+          if ($('form#chatForm').is(':hidden')) {
+            count++;
+            $('#badge').show();
+            $('#badge').text(count);
+          }
+          else {
+            count = 0;
+          }
+
+          // scroll automatically to the bottom
+          scrollToBottom();
+        });
+
+        socket.on('active_users', function(users) {
+          var usr = '<p>';
+          for (var i in users) {
+            usr += users[i] + '<br/>';
+          }
+          $('#users').html(usr);
+          $('#online').html('<u>Online</u>(' + users.length + ')');
+        });
+
+        socket.on('reset_session', function(maxAge) {
+          $('#maxAge').text(getCookieTime(maxAge));
+        });
+      });
+
+      function scrollToBottom() {
+        var cBox = $('#cafe').get(0);
+        var bHeight = cBox.scrollHeight;
+        cBox.scrollTo(0,bHeight);
+      }
+
+      function scrollToBottom2() {
+        $('#cafe').stop().animate({
+          scrollTop: $('#cafe')[0].scrollHeight
+        });
+      }
+
+      // old code no more required as we optimized Home to be more dynamic
+      function updateSession() {
+        var chatMessage = $('p#cafe').html();
+        if (chatMessage) {
+          if (getHash(chatMessage) == prevChatHash) {
+            console.log("no update needed");
+            return true;
+          }
+          else {
+            prevChatHash = getHash(chatMessage);
+          }
+
+          // encode so we can keep html format intact
+          chatMessage = encodeURI(chatMessage);
+          $.post('/update/session', {key: 'chatMessage', val: chatMessage}, function(data) {
+            if (data.error) {
+              console.log("error: update failed");
+            }
+            else {
+              console.log(data);
+            }
+          }).fail(function() {
+            console.log("call failed");
+          });
+        }
+      }

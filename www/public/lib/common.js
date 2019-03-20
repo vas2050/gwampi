@@ -1,4 +1,4 @@
-var appid = '<appid>';
+var appid = '8070fe34e576d6a2acde6e884ed25201';
 
 function fetchGeoData(callback) {
   // check if cached already
@@ -76,22 +76,24 @@ function clock() {
   setTimeout('clock()', 1000);
 }
 
-function getHMS(str) {
-  var [hh, mm, ss] = str.split(/:/);
+function downCounter(hhmmss) {
+  var [hh, mm, ss] = hhmmss.split(/:/);
   if (ss > 0) {
     ss--;
   }
   else if (mm > 0) {
     mm--; ss = 59;
   }
-  else { hh--; mm = 59; ss = 59;
+  else {
+    hh--; mm = 59; ss = 59;
   }
 
+  var sec = hh * 60 * 60 + mm * 60 + ss;
   if (hh >= 0) {
-    return([hh,mm,ss].map(function(x){ return x.toString().padStart(2,0);}).join(':'))
+    return([[hh,mm,ss].map(function(x){ return x.toString().padStart(2,0);}).join(':'), sec])
   }
   else {
-    return null;
+    return([null, null]);
   }
 }
 
@@ -124,6 +126,7 @@ function setCookie(cookie) {
     var dt = new Date();
     dt.setTime(dt.getTime() + msec);
     cexp = "expires=" + dt.toUTCString();
+    console.log("cexp: ", cexp);
   }
 
   cvalue = btoa(JSON.stringify(cvalue));
@@ -289,7 +292,7 @@ function uFull(s) {
 var foot_message = '';
 function footer(color, message, end) {
   if (!message && !end) {
-    $('div #rfoot').html('');
+    $('div #mfoot').html('');
   }
   else {
     var html_message = '<span style="color:' + color + ';">' + message + '</span>';
@@ -299,4 +302,16 @@ function footer(color, message, end) {
       foot_message = '';
     }
   }
+}
+
+function getCookieTime(sec) {
+  var total = Math.trunc(sec / 1000)
+  var ss = total % 60
+  var mm = Math.trunc((total % (60 * 60)) / 60)
+  var hh = Math.trunc(total / (60 * 60))
+  return ([hh,mm,ss].map(function(x) {return x.toString().padStart(2,0);}).join(':'));
+}
+
+function getHash(data) {
+  return data.split("").reduce(function(a,b) { a = ((a << 5) - a) + b.charCodeAt(0); return a&a; }, 0);
 }

@@ -6,9 +6,22 @@ html
     script(src='/static/lib/jquery-3.3.1.js')
     script(src='/static/lib/common.js')
 
+    // beep
+    audio#beep(style="display:none;")
+      source(src="/static/audio/beep.mp3")
+      source(src="/static/audio/beep.ogg")
+      source(src="/static/audio/beep.m4r")
+
     script.
       var geoData;
+      var changedOld;
+
       window.onload = function() {
+        // when page is first loaded
+        if ('#{session.user}' && '#{session.cookie.maxAge}') {
+          $('span#maxAge').text(getCookieTime('#{session.cookie.maxAge}'));
+        }
+
         clock();
         loadGeoData();
         checkSessionOut();
@@ -17,19 +30,29 @@ html
       function checkSessionOut() {
         //did previous session expire automatically?
         if ('#{session_expired}' == 'true') {
-          $('div #rfoot').html("<p style='color: red;'>Your session expired!</p>");
+          footer('red', 'Your session expired!', true);
         }
 
         // only if there is a valid user session exists
         if ('#{session.user}') {
-          var HMS = getHMS($('#maxAge').text());
-          if (HMS) {
-            $('#maxAge').text(HMS);
+          var [hhmmss, sec] = downCounter($('#maxAge').text());
+          if (hhmmss) {
+            // alert when 5 mins away from expiry
+            if ((sec / 60) <= 5) {
+              $('#sessionInfo').css('display', 'unset');
+              // beep once every minute until session is reset or out
+              if (sec % 60 == 0) beep();
+            }
+            else {
+              $('#sessionInfo').css('display', 'none');
+            }
+
+            $('#maxAge').text(hhmmss);
             setTimeout('checkSessionOut()', 1000);
           }
           // when it hits below zero
-          else if (HMS === null) {
-            $('div #rfoot').html("<p style='color: red;'>Your session expired!</p>");
+          else if (hhmmss === null) {
+            footer('red', 'Your session expired!', true);
             var elem = document.getElementById('logout');
             var href = elem.href + '?session_expired=true&';
             elem.setAttribute('href', href);
@@ -38,11 +61,16 @@ html
         }
       }
 
+      function beep() {
+        var audio = $('audio#beep').get(0);
+        audio.play();
+      }
+
   body
     - var user = session.user
-    div#head.head(style={'width': '100%', 'height': '15%'})
-      table(width='100%', height= '25%')
-        tbody 
+    div#head.head(style={'width': '100%', 'height': '12%'})
+      table#tbl1(width='100%', height= '25%')
+        tbody
           tr
             td(colspan=2)
               p(style='font-size:14px; font-family:Courier New; color:blue;')
@@ -64,7 +92,8 @@ html
             td &nbsp;
             td(align='right')
               if user
-                div= user.fullname
+                div Welcome
+                  b &nbsp;#{user.fname}!
           tr
             td
               if user
@@ -76,9 +105,9 @@ html
                     div.block(style={'font-variant': 'small-caps'})
                       a(id=key, class='button-a')= val
             td
-              if user
-                div.block(style={'font-variant': 'small-caps'})
-                  a#home.button-a(href='/') Home
+              //if user
+              div.block(style={'font-variant': 'small-caps'})
+                a#home.button-a Home
             td &nbsp;
             td(align='right')
               if user
@@ -93,6 +122,21 @@ html
 
     script.
       $(document).ready(function() {
+        if ('#{session.user}') {
+          var session = setInterval(function() {
+            var changedNew = '#{session.changed}';
+            if (changedNew != changedOld) {
+              var maxAgeNew = '#{session.cookie.maxAge}';
+              $('span#maxAge').text(getCookieTime(maxAgeNew));
+              console.log("changed: ", changedNew);
+              changedOld = changedNew;
+            }
+          }, 1000);
+        }
+
+        // main
+        $('#main').show();
+
         // login
         $('#login').on('click', function() {
           $.ajax({
@@ -139,6 +183,12 @@ html
           });
         });
 
+        // home
+
+        $('#home').on('click', function() {
+          $('#mainHer').hide();
+        });
+
         // grid
         $('#grid').on('click', function() {
           $.ajax({
@@ -155,8 +205,9 @@ html
                 // do nothing
               }
               else {
+                footer('blue', 'Welcome to H.E.S!', true);
                 $('#main').css('background-image', 'none');
-                $('body').append(data);
+                $('#mainHer').append(data);
               }
             },
             error: function(xhr, status, error) {
@@ -184,6 +235,7 @@ html
         /*
         //logout 
         $('#logout').on('click', function() {
+          console.log('clicked');
           $.ajax({
             url: '/logout',
             type: 'GET',
@@ -198,10 +250,59 @@ html
           });
         });
         */
+        $('#chatBtn').on('click', function() {
+          if ($('form#chatForm').length > 0) {
+            // already loaded so show or hide
+            if ($('form#chatForm').is(":visible")) {
+              footer('');
+              $('#main').css('opacity', '1.0');
+              $('form#chatForm').hide();
+            }
+            else {
+              footer('green', 'Welcome to the chat cafe!', true);
+              $('form#chatForm').show();
+              $('#main').css('opacity', '0.8');
+              $('#badge').hide();
+              $('#msg').focus();
+            }
+          }
+          else {
+            // load the chat page
+            $.ajax({
+              url: '/comm',
+              type: 'GET',
+              success: function(data, status) {
+                console.log('/GET comm passed');
+                if (data.error) {
+                  console.log(data.error);
+                  footer('red', "Sorry, " + data.error, true);
+                }
+                else {
+                  $('span#chatBox').html(data);
+                  // restore the conversation
+                  var chatMessage = '#{session.chatMessage}';
+                  if (chatMessage) {
+                    $('p#cafe').html(decodeURI(chatMessage));
+                  }
+                }
+              },
+              error: function(xhr, status, error) {
+                console.log(status);
+              },
+            });
+          }
+        });
       })
 
     hr
-    div#main.main
+    div#main.main(style="display:none;")
+      if user
+        span#chatBtn.chatBtn &#x1F4AC;
+          span#badge.badge
+        span#chatBox
+
+    div#mainHer.main(style="display:none;")
+
     hr
     div#foot.foot
       div#lfoot.lfoot
@@ -211,14 +312,10 @@ html
           - var views = session.views
           - var path = '/'
           - views[path] = views[path]
-          - var total = Math.trunc(session.cookie.maxAge / 1000)
-          - var ss = total % 60
-          - var mm = Math.trunc((total % (60 * 60)) / 60)
-          - var hh = Math.trunc(total / (60 * 60))
-          - var maxAge = [hh,mm,ss].map(function(x) {if (x.length==1) x = '0' + x; return x; }).join(':')
 
-          session views: #{views[path]}
-            if views[path]
-              |, session will expire in 
-              span#maxAge #{maxAge}
+          //scan session views: #{views[path]}
+          //  if views[path]
+          //    |, session will expire in 
+          span#sessionInfo(style="display:none;color:red;") Alert!!! Your session will expire in 
+            span#maxAge
 // END

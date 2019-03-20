@@ -132,36 +132,69 @@ div.main {
   background-image: url('/static/images/bg1.jpg');
   background-repeat: no-repeat;
   background-size: 100% 100%;
-  height: 77%;
+  height: 80%;
   width: 100%;
 }
 
+.chatWin {
+  position: absolute;
+  bottom: 12%;
+  left: 12;
+  width: 80%;
+  font-size: 16px;
+  font-color: black;
+}
+
+.chatBtn {
+  cursor: pointer;
+  position: absolute;
+  bottom: 9%;
+  font-size: 40px;
+  right: 1%;
+  border: none;
+  opacity: 0.8;
+}
+
+.chatBtn:hover {
+  opacity: 1.0;
+  font-size: 50px;
+}
+
+.chatBtn .badge {
+  top: 0px;
+  position: absolute;
+  right: 0px;
+  padding: 5px 5px;
+  border-radius: 50%;
+  color: white;
+  font-size: 10px;
+  background-color: red;
+  display: none;
+}
+
 .foot {
-  height: 5%;
+  height: 2%;
   width: 100%;
   color: blue;
   font-family: verdana;
-  font-size: 10px;
+  font-size: 2vw;
   float: left;
   //display: block;
 }
 
 .lfoot {
   width: 3%;
-  font-size: x-large;
   display: inline-block;
   position: absolute;
 }
 
 .lfoot:before {
-  content: '\1F50A';
+  content: '\1F5E3';
 }
 
 .mfoot {
   width: 60%;
-  padding: 0 5px;
-  text-align: justify;
-  font-size: 16px;
+  //text-align: justify;
   display: inline-block;
   overflow: auto;
   position: absolute;
@@ -175,34 +208,32 @@ div.main {
 
 .mfoot:empty:before {
   color: blue;
-  font-size: 16px;
   font-weight: bold;
   content: 'Welcome to Gwampi!';
 }
 
 .rfoot {
   //width: 17%;
-  font-size: 16px;
   display: inline-block;
   //position: absolute;
   float: right;
   color: blue;
 }
 
-table {
+.tbl1 {
   table-layout: fixed;
   border-spacing: 5;
 }
 
-td {
+.tbl1.td {
   align: left;
 }
 
-tr {
+.tbl1.tr {
   valign: bottom;
 }
 
-table, th, td {
+.tbl1, .tbl1.th, .tbl1.td {
   border: 0px solid black;
 }
 
@@ -335,4 +366,18 @@ input.form {
   right: -5px;
   content: '\27F6 Already Registered!';
   size: 8px;
+}
+
+.back {
+  color: black;
+  cursor: pointer;
+  padding: 4px 15px;
+  font-size: 20px;
+  font-weight: bold;
+  font-family: Courier New;
+}
+
+.back:hover {
+  color: silver;
+  background-color: black;
 }
