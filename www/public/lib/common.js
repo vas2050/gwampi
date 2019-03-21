@@ -1,4 +1,4 @@
-var appid = '8070fe34e576d6a2acde6e884ed25201';
+var appid = '<appid>';
 
 function fetchGeoData(callback) {
   // check if cached already
